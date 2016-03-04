@@ -23,13 +23,13 @@ le_result_t relayControl_Count(uint8_t *countPtr)
 //--------------------------------------------------------------------------------------------------
 le_result_t relayControl_GetState(uint8_t id, bool *statePtr)
 {
-    if(id >= RELAY_NB)
+    if(id == 0 || id > RELAY_NB)
     {
         LE_ERROR("Relay id %u not controlled.", id);
         return LE_OUT_OF_RANGE;
     }
 
-    *statePtr = RelayStates[id];
+    *statePtr = RelayStates[id-1];
     return LE_OK;
 }
 
@@ -40,13 +40,13 @@ le_result_t relayControl_GetState(uint8_t id, bool *statePtr)
 //--------------------------------------------------------------------------------------------------
 le_result_t relayControl_SetState(uint8_t id, bool statePtr)
 {
-    if(id >= RELAY_NB)
+    if(id == 0 || id > RELAY_NB)
     {
         LE_ERROR("Relay id %u not controlled.", id);
         return LE_OUT_OF_RANGE;
     }
 
-    RelayStates[id] = statePtr;
+    RelayStates[id-1] = statePtr;
     return LE_OK;
 }
 

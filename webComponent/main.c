@@ -1,26 +1,218 @@
 
 #include <legato.h>
+#include "interfaces.h"
 
 #include "mongoose/mongoose.h"
 
+#define MAX_RELAY_NB    16
+
 static const char HttpPort[] = "8000";
 
+static void SendInternalError(struct mg_connection *connPtr)
+{
+    mg_send_head(connPtr, 500, 0, NULL);
+}
+
+//--------------------------------------------------------------------------------------------------
+/**
+ * Print an array of JSON structures reflecting the states of all relays.
+ */
+//--------------------------------------------------------------------------------------------------
+static void ListRelays(struct mg_connection *connPtr)
+{
+    uint8_t nbRelays = 0;
+    le_result_t res;
+    char buf[(MAX_RELAY_NB*25) + 10];
+    size_t bufPos = 0;
+
+    res = relayControl_Count(&nbRelays);
+    if (res != LE_OK)
+    {
+        LE_ERROR("Unable to get the number of relays");
+        goto error;
+    }
+
+    int id;
+    const char *prependStr = "[";
+    bool state;
+    int wrote;
+
+    for (id = 1; id <= nbRelays; id++)
+    {
+        if (relayControl_GetState(id, &state) != LE_OK)
+        {
+            LE_ERROR("Unable to get state of relay %d", id);
+            goto error;
+        }
+
+        wrote = snprintf(&buf[bufPos],
+                         sizeof(buf)-bufPos,
+                         "%s{\"state\": %d, \"id\": \"%d\"}",
+                         prependStr, (int)state, id);
+
+        if ( (wrote < 0) || (bufPos+wrote) >= sizeof(buf) )
+        {
+            LE_ERROR("Buffer too small");
+            goto error;
+        }
+
+        bufPos += wrote;
+        prependStr = ", ";
+    }
+
+    wrote = snprintf(&buf[bufPos],
+                     sizeof(buf)-bufPos, "]");
+
+    if ( (wrote < 0) || (bufPos+wrote) >= sizeof(buf) )
+    {
+        LE_ERROR("Buffer too small");
+        goto error;
+    }
+
+    mg_printf(connPtr, "HTTP/1.0 200 OK\r\nContent-Length: %d\r\n"
+                       "Content-Type: application/json\r\n\r\n%s",
+                       (int) strlen(buf), buf);
+
+error:
+    SendInternalError(connPtr);
+}
+
+//--------------------------------------------------------------------------------------------------
+/**
+ * Print a JSON structure to reflect the state of a relay.
+ */
+//--------------------------------------------------------------------------------------------------
+static void PrintRelay(struct mg_connection *connPtr, int id)
+{
+    bool state;
+    char buf[50];
+
+    if (relayControl_GetState(id, &state) != LE_OK)
+    {
+        LE_ERROR("Unable to get state of relay %d", id);
+        goto error;
+    }
+
+    sprintf(buf, "{\"state\": %d, \"id\": \"%d\"}", (int)state, id);
+
+    mg_printf(connPtr, "HTTP/1.0 200 OK\r\nContent-Length: %d\r\n"
+                       "Content-Type: application/json\r\n\r\n%s",
+                       (int) strlen(buf), buf);
+
+error:
+    SendInternalError(connPtr);
+}
+
+//--------------------------------------------------------------------------------------------------
+/**
+ * Event handler for the web server.
+ */
+//--------------------------------------------------------------------------------------------------
+static le_result_t SetRelay(struct http_message *messagePtr, int id)
+{
+    const struct mg_str *bodyPtr = messagePtr->query_string.len > 0 ? &messagePtr->query_string : &messagePtr->body;
+    char bufState[10];
+    bool state = false;
+
+    if (0 == mg_get_http_var(bodyPtr, "state", bufState, sizeof(bufState)))
+    {
+        return LE_BAD_PARAMETER;
+    }
+
+    if (bufState[1] != '\0')
+    {
+        return LE_BAD_PARAMETER;
+    }
+
+    switch(bufState[0])
+    {
+        case '1':
+            state = true;
+            break;
+
+        case '0':
+            state = false;
+            break;
+
+        default:
+            return LE_BAD_PARAMETER;
+    }
+
+    LE_DEBUG("Set relay state: %d", state);
+
+    return relayControl_SetState(id, state);
+}
+
+//--------------------------------------------------------------------------------------------------
+/**
+ * Event handler for the web server.
+ */
+//--------------------------------------------------------------------------------------------------
 static void EventHandler(struct mg_connection *connPtr, int ev, void *p)
 {
-    if (ev == MG_EV_HTTP_REQUEST)
+    if (ev != MG_EV_HTTP_REQUEST)
     {
-        struct http_message *messagePtr = (struct http_message *)p;
-        char reply[100];
+        return;
+    }
 
-        /* Send the reply */
-        snprintf(reply, sizeof(reply), "{ \"uri\": \"%.*s\" }\n",
-                 (int) messagePtr->uri.len, messagePtr->uri.p);
-        mg_printf(connPtr, "HTTP/1.1 200 OK\r\n"
-                  "Content-Type: application/json\r\n"
-                  "Content-Length: %d\r\n"
-                  "\r\n"
-                  "%s",
-                  (int) strlen(reply), reply);
+    struct http_message *messagePtr = (struct http_message *)p;
+    le_result_t res = LE_NOT_POSSIBLE;
+
+    LE_INFO("HTTP Request %s", messagePtr->uri.p);
+
+    if (messagePtr->uri.len < strlen("/relays"))
+    {
+        res = LE_NOT_FOUND;
+    }
+    else if (memcmp(messagePtr->uri.p, "/relays", strlen("/relays")) != 0)
+    {
+        res = LE_NOT_FOUND;
+    }
+    else
+    {
+        const char *uriPtr = messagePtr->uri.p + strlen("/relays");
+
+        LE_INFO("HTTP SubRequest %s", uriPtr);
+
+        if (*uriPtr == ' ')
+        {
+            ListRelays(connPtr);
+            res = LE_OK;
+        }
+        else if(*uriPtr == '/')
+        {
+            int id;
+
+            uriPtr += 1;
+
+            id = atoi(uriPtr);
+            LE_INFO("Relay %d", id);
+
+            res = LE_OK;
+
+            if (mg_vcasecmp(&messagePtr->method, "POST") == 0)
+            {
+                res = SetRelay(messagePtr, id);
+            }
+
+            if (res == LE_OK)
+            {
+                PrintRelay(connPtr, id);
+            }
+        }
+    }
+
+    if (res == LE_NOT_FOUND)
+    {
+        LE_ERROR("URI not found");
+        mg_send_head(connPtr, 404, 0, NULL);
+        return;
+    }
+
+    if (res != LE_OK)
+    {
+        LE_ERROR("Internal error");
+        mg_send_head(connPtr, 500, 0, NULL);
     }
 }
 
