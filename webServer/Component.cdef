@@ -1,0 +1,13 @@
+requires:
+{
+    api:
+    {
+        relayControl = relayControl.api
+    }
+}
+
+sources:
+{
+    main.c
+    mongoose/mongoose.c
+}

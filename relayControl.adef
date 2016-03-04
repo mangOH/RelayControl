@@ -1,0 +1,21 @@
+version: 1.0
+sandboxed: true
+start: manual
+
+executables:
+{
+    relayServer = (webServer relayComponent)
+}
+
+processes:
+{
+    run:
+    {
+        (relayServer)
+    }
+}
+
+bindings:
+{
+    relayServer.webServer.relayControl -> relayServer.relayComponent
+}

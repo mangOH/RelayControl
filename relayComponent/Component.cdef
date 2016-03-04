@@ -1,0 +1,12 @@
+provides:
+{
+    api:
+    {
+        relayControl = relayControl.api
+    }
+}
+
+sources:
+{
+    control.c
+}

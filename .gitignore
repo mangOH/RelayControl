@@ -1,0 +1,45 @@
+# Build Products
+/build
+/toolchains
+/bin
+/Documentation*
+/releases
+/version
+/sources.md5
+/delivery
+doxygen.*.log
+doxygen.*.err
+_build_*
+system.sdef
+
+# ... per target
+*.localhost
+*.ar7
+*.ar86
+*.wp85
+*.virt
+*.update
+*.uinst
+
+# Vim
+*.swp
+
+# Eclipse / Developer Studio
+.cproject
+.project
+.settings
+package.properties
+wmnew.opt
+
+# KDev4
+*.kdev4
+
+# Python
+*.pyc
+/Debug
+
+# Target files backup
+targetFiles/*/backup_*
+
+# Injected target defs
+targetDefs.extra
