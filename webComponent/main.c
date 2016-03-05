@@ -105,26 +105,19 @@ error:
 
 //--------------------------------------------------------------------------------------------------
 /**
- * Event handler for the web server.
+ * Handle case where relay state was sent as a form. 
  */
 //--------------------------------------------------------------------------------------------------
-static le_result_t SetRelay(struct http_message *messagePtr, int id)
+static le_result_t SetRelayForm(const char *bufStatePtr, int id)
 {
-    const struct mg_str *bodyPtr = messagePtr->query_string.len > 0 ? &messagePtr->query_string : &messagePtr->body;
-    char bufState[10];
     bool state = false;
 
-    if (0 == mg_get_http_var(bodyPtr, "state", bufState, sizeof(bufState)))
+    if (bufStatePtr[1] != '\0')
     {
         return LE_BAD_PARAMETER;
     }
 
-    if (bufState[1] != '\0')
-    {
-        return LE_BAD_PARAMETER;
-    }
-
-    switch(bufState[0])
+    switch(bufStatePtr[0])
     {
         case '1':
             state = true;
@@ -138,9 +131,89 @@ static le_result_t SetRelay(struct http_message *messagePtr, int id)
             return LE_BAD_PARAMETER;
     }
 
-    LE_DEBUG("Set relay state: %d", state);
+    return relayControl_SetState(id, state);
+}
+
+//--------------------------------------------------------------------------------------------------
+/**
+ * Handle case where relay state was sent as a JSON structure.
+ */
+//--------------------------------------------------------------------------------------------------
+static le_result_t SetRelayJson(const struct mg_str *bodyPtr, int id)
+{
+    bool state = false;
+    struct json_token tokens[200], *statePtr;
+    int n;
+
+    n = parse_json(bodyPtr->p, bodyPtr->len, tokens, sizeof(tokens) / sizeof(tokens[0]));
+    if (n < 0)
+    {
+        return LE_BAD_PARAMETER;
+    }
+
+    statePtr = find_json_token(tokens, "state");
+    if (statePtr == NULL)
+    {
+        return LE_BAD_PARAMETER;
+    }
+
+    if (0 == strncmp("1", statePtr->ptr, statePtr->len))
+    {
+        state = true;
+    }
+    else if (0 == strncmp("0", statePtr->ptr, statePtr->len))
+    {
+        state = false;
+    }
+    else
+    {
+        return LE_BAD_PARAMETER;
+    }
+
+    LE_DEBUG("Set relay state (JSON): %d", state);
 
     return relayControl_SetState(id, state);
+}
+
+//--------------------------------------------------------------------------------------------------
+/**
+ * Given parameters from the HTTP client, set the relay state.
+ */
+//--------------------------------------------------------------------------------------------------
+static le_result_t SetRelay(struct http_message *messagePtr, int id)
+{
+    const struct mg_str *bodyPtr = messagePtr->query_string.len > 0 ? &messagePtr->query_string : &messagePtr->body;
+    char bufState[10] = {0};
+
+    // JSON ?
+    int i;
+
+    for (i = 0; i < MG_MAX_HTTP_HEADERS && messagePtr->header_names[i].len > 0; i++) {
+        struct mg_str headerNameStr = messagePtr->header_names[i];
+        struct mg_str headerValueStr = messagePtr->header_values[i];
+
+        if (mg_vcasecmp(&headerNameStr, "Content-Type") != 0)
+        {
+            continue;
+        }
+
+        if (mg_vcasecmp(&headerValueStr, "application/json") != 0)
+        {
+            break;
+        }
+
+        return SetRelayJson(&messagePtr->body, id);
+    }
+
+    // Form ?
+    if (0 != mg_get_http_var(bodyPtr, "state", bufState, sizeof(bufState)))
+    {
+        return SetRelayForm(bufState, id);
+    }
+
+    LE_ERROR("Invalid set relay request");
+
+    return LE_BAD_PARAMETER;
 }
 
 //--------------------------------------------------------------------------------------------------
