@@ -2,7 +2,7 @@ requires:
 {
     api:
     {
-        relayControl = relayControl.api
+        ${MANGOH_ROOT}/samples/RelayControl/relayControl.api
     }
 }
 

@@ -20,4 +20,5 @@ processes:
 bindings:
 {
     webServer.webComponent.relayControl -> relayService.relayComponent.relayControl
+    relayService.relayComponent.dataRouter -> dataRouter.dataRouter
 }

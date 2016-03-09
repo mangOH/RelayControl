@@ -1,7 +1,9 @@
+#include "legato.h"
+#include "interfaces.h"
 
-#include <legato.h>
-
-#define RELAY_NB 8
+#define KEY             "SetGpio"
+#define RELAY_NB         8
+#define MSG_MAX_LEN      25
 
 static bool RelayStates[RELAY_NB] = {0};
 
@@ -40,6 +42,8 @@ le_result_t relayControl_GetState(uint8_t id, bool *statePtr)
 //--------------------------------------------------------------------------------------------------
 le_result_t relayControl_SetState(uint8_t id, bool statePtr)
 {
+    char buffer[MSG_MAX_LEN];
+
     if(id == 0 || id > RELAY_NB)
     {
         LE_ERROR("Relay id %u not controlled.", id);
@@ -47,6 +51,10 @@ le_result_t relayControl_SetState(uint8_t id, bool statePtr)
     }
 
     RelayStates[id-1] = statePtr;
+    snprintf(buffer, MSG_MAX_LEN, "%d,%d", id, statePtr);
+    LE_INFO("Buffer: %s", buffer);
+    dataRouter_WriteString(KEY, buffer, time(NULL));
+
     return LE_OK;
 }
 
@@ -56,5 +64,6 @@ le_result_t relayControl_SetState(uint8_t id, bool statePtr)
  */
 //--------------------------------------------------------------------------------------------------
 COMPONENT_INIT
-{
+{        
+    dataRouter_SessionStart("","", 0, DATAROUTER_CACHE);
 }

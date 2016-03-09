@@ -1,5 +1,5 @@
 
-TARGETS := ar7 ar86 wp85 raspi localhost
+TARGETS := wp85
 
 .PHONY: all $(TARGETS)
 all: $(TARGETS)
@@ -7,6 +7,7 @@ all: $(TARGETS)
 $(TARGETS):
 	mkapp -v -t $@ \
 	    -i . \
+	    -i ../../apps/DataRouter \
 		relayControl.adef
 
 clean:

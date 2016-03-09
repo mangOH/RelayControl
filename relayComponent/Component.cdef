@@ -2,8 +2,16 @@ provides:
 {
     api:
     {
-        relayControl = relayControl.api
+        ${MANGOH_ROOT}/samples/RelayControl/relayControl.api
     }
+}
+
+requires:
+{
+    api:
+    {
+        ${MANGOH_ROOT}/apps/DataRouter/dataRouter.api
+    }   
 }
 
 sources:
