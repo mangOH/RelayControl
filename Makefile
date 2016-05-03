@@ -1,6 +1,8 @@
 
 TARGETS := wp85
 
+export MANGOH_ROOT ?= $(PWD)/../..
+
 .PHONY: all $(TARGETS)
 all: $(TARGETS)
 
