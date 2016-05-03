@@ -105,7 +105,7 @@ error:
 
 //--------------------------------------------------------------------------------------------------
 /**
- * Handle case where relay state was sent as a form. 
+ * Handle case where relay state was sent as a form.
  */
 //--------------------------------------------------------------------------------------------------
 static le_result_t SetRelayForm(const char *bufStatePtr, int id)

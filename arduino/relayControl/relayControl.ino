@@ -9,11 +9,11 @@
 
 void setup() {
   uint8_t i;
-  
+
   for (i = MIN_GPIO; i < MAX_GPIO; i++) {
     // setup gpio pin
     pinMode(i, OUTPUT);
-    
+
     // turn all relays off
     digitalWrite(i, HIGH);
   }
@@ -22,12 +22,15 @@ void setup() {
   Bridge.begin(115200);
   AirVantage.begin();
 
-  // Wait until a Serial Monitor is connected.
-  while (!Serial);
-
   AirVantage.startSession("", "", 0, CACHE);
 
   AirVantage.subscribe(KEY);
+}
+
+// Pin is 1-indexed so offset by 1
+// then map to the MIN_GPIO - MAX_GPIO range
+int pinToGpio(int pin) {
+  return (pin-1+MIN_GPIO);
 }
 
 // execute relay control command
@@ -38,21 +41,24 @@ void parseMessage(String message)
   int index = message.indexOf(',');
   String pinStr = message.substring(0, index);
   String valueStr = message.substring(index + 1);
-  
-  Serial.print("Pin: ");
-  Serial.println(pinStr);
-  Serial.print("Value: ");
-  Serial.println(valueStr);
-  
+
+  if(Serial) {
+    Serial.print("Pin(");
+    Serial.print(pinStr);
+    Serial.print(") Value(");
+    Serial.print(valueStr);
+    Serial.println(")");
+  }
+
   int pin = pinStr.toInt();
   int value = valueStr.toInt();
-  
-  if ((pin-MIN_GPIO) >= MAX_GPIO) {
+
+  if (pinToGpio(pin) >= MAX_GPIO) {
     Serial.println("Invalid pin number");
     return;
   }
 
-  digitalWrite((pin-MIN_GPIO), value);
+  digitalWrite(pinToGpio(pin), value);
 }
 
 void loop() {

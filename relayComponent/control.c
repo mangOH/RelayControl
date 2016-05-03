@@ -64,6 +64,6 @@ le_result_t relayControl_SetState(uint8_t id, bool statePtr)
  */
 //--------------------------------------------------------------------------------------------------
 COMPONENT_INIT
-{        
+{
     dataRouter_SessionStart("","", 0, DATAROUTER_CACHE);
 }
