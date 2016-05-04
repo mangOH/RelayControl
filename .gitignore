@@ -20,6 +20,7 @@ system.sdef
 *.virt
 *.update
 *.uinst
+*.hex
 
 # Vim
 *.swp
