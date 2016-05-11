@@ -23,6 +23,7 @@ apps:
     $LEGATO_ROOT/apps/platformServices/voiceCallService
     $LEGATO_ROOT/apps/platformServices/gpioService
 
+    $MANGOH_ROOT/apps/GpioExpander/gpioExpanderService/gpioExpanderService.adef
     $MANGOH_ROOT/apps/ArduinoBridge/arduinoBridge.adef
     $MANGOH_ROOT/apps/MqttClient/mqttClient.adef
     $MANGOH_ROOT/apps/DataRouter/dataRouter.adef

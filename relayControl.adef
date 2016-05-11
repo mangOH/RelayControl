@@ -21,4 +21,5 @@ bindings:
 {
     webServer.webComponent.relayControl -> relayService.relayComponent.relayControl
     relayService.relayComponent.dataRouter -> dataRouter.dataRouter
+    relayService.relayComponent.mangoh_muxCtrl -> muxCtrlService.mangoh_muxCtrl
 }

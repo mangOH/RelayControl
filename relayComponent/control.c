@@ -188,6 +188,9 @@ COMPONENT_INIT
     ResponseThread = le_thread_Create("ResponseThread", MainResponseHandler, NULL);
     le_thread_Start(ResponseThread);
 
+    // Reset arduino upon app start to make sure we are in a default state
+    mangoh_muxCtrl_ArduinoReset();
+
     // Start routing session
     dataRouter_SessionStart("","", 0, DATAROUTER_CACHE);
 }

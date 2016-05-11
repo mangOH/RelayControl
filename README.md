@@ -2,6 +2,15 @@
 
 A simple RESTful app to control relay boards.
 
+## Build
+
+To build the system, you can do:
+```bash
+cp relayControl.sdef ../../mangoh.sdef
+cd ../../../legato
+make wp85
+```
+
 ## Support
 
 * mangOH

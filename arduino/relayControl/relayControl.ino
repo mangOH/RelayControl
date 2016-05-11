@@ -21,6 +21,13 @@ void setup() {
     pinMode(i, OUTPUT);
 
     // turn all relays off
+    digitalWrite(i, LOW);
+  }
+
+  delay(1000);
+
+  for (i = MIN_GPIO; i < MAX_GPIO; i++) {
+    // turn all relays off
     digitalWrite(i, HIGH);
   }
 
@@ -38,7 +45,7 @@ void setup() {
 // Pin is 1-indexed so offset by 1
 // then map to the [MIN_GPIO, MAX_GPIO] range
 int pinToGpio(int pin) {
-  return (pin-1+MIN_GPIO);
+  return (pin - 1 + MIN_GPIO);
 }
 
 void handleSetState(String message)
@@ -48,7 +55,7 @@ void handleSetState(String message)
   String pinStr = message.substring(0, index);
   String valueStr = message.substring(index + 1);
 
-  if(Serial) {
+  if (Serial) {
     Serial.print("SetState Pin(");
     Serial.print(pinStr);
     Serial.print(") Value(");
@@ -60,7 +67,7 @@ void handleSetState(String message)
   int value = valueStr.toInt();
 
   if (pinToGpio(pin) > MAX_GPIO) {
-    if(Serial)
+    if (Serial)
       Serial.println("Invalid pin number");
     return;
   }
@@ -75,7 +82,7 @@ void handleGetState(String pinStr)
   int value;
 
   if (pinToGpio(pin) > MAX_GPIO) {
-    if(Serial)
+    if (Serial)
       Serial.println("Invalid pin number");
     return;
   }
@@ -83,7 +90,7 @@ void handleGetState(String pinStr)
   value = digitalRead(pinToGpio(pin));
   String valueStr = String(value);
 
-  if(Serial) {
+  if (Serial) {
     Serial.print("GetState Pin(");
     Serial.print(pinStr);
     Serial.print(") Value(");
@@ -109,15 +116,15 @@ void loop() {
   while (AirVantage.dataAvailable())
   {
     AirVantage.readMessage(message);
-    while(message != "")
+    while (message != "")
     {
       current = message.substring(0, message.indexOf("\n"));
-      message = message.substring(message.indexOf("\n")+1);
+      message = message.substring(message.indexOf("\n") + 1);
 
       // Set state ?
       if (current.startsWith("|" KEY_SETSTATE_REQ)) {
         content = AirVantage.parseString(KEY_SETSTATE_REQ, current);
-        if(Serial)
+        if (Serial)
           Serial.println("SetState request");
         handleSetState(content);
       }
@@ -125,20 +132,20 @@ void loop() {
       // Get state ?
       else if (current.startsWith("|" KEY_GETSTATE_REQ)) {
         content = AirVantage.parseString(KEY_GETSTATE_REQ, current);
-        if(Serial)
+        if (Serial)
           Serial.println("GetState request");
         handleGetState(content);
       }
 
       // Count ?
       else if (current.startsWith("|" KEY_COUNT_REQ)) {
-        if(Serial)
+        if (Serial)
           Serial.println("Count request");
         handleCount();
       }
 
       else {
-        if(Serial)
+        if (Serial)
           Serial.println("Unhandled request");
       }
     }
