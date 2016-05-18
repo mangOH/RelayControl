@@ -68,7 +68,7 @@ le_result_t relayControl_GetState(uint8_t id, bool *statePtr)
         return LE_NOT_POSSIBLE;
     }
 
-    if((id == 0) || (id > maxId))
+    if(id >= maxId)
     {
         LE_ERROR("Relay id %u not controlled.", id);
         return LE_OUT_OF_RANGE;
@@ -110,7 +110,7 @@ le_result_t relayControl_SetState(uint8_t id, bool statePtr)
         return LE_NOT_POSSIBLE;
     }
 
-    if((id == 0) || (id > maxId))
+    if(id >= maxId)
     {
         LE_ERROR("Relay id %u not controlled.", id);
         return LE_OUT_OF_RANGE;

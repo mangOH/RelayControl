@@ -11,7 +11,7 @@
 #define KEY_SETSTATE_REQ   "SetRelayStateReq"
 
 #define MIN_GPIO 2
-#define MAX_GPIO 9
+#define MAX_GPIO 13
 
 void setup() {
   uint8_t i;
@@ -20,13 +20,6 @@ void setup() {
     // setup gpio pin
     pinMode(i, OUTPUT);
 
-    // turn all relays off
-    digitalWrite(i, LOW);
-  }
-
-  delay(1000);
-
-  for (i = MIN_GPIO; i < MAX_GPIO; i++) {
     // turn all relays off
     digitalWrite(i, HIGH);
   }
@@ -45,7 +38,7 @@ void setup() {
 // Pin is 1-indexed so offset by 1
 // then map to the [MIN_GPIO, MAX_GPIO] range
 int pinToGpio(int pin) {
-  return (pin - 1 + MIN_GPIO);
+  return (pin + MIN_GPIO);
 }
 
 void handleSetState(String message)
@@ -151,4 +144,5 @@ void loop() {
     }
   }
 }
+
 

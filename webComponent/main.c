@@ -6,7 +6,7 @@
 
 #define MAX_RELAY_NB    16
 
-static const char HttpPort[] = "8000";
+static const char HttpPort[] = "8080";
 
 static void SendInternalError(struct mg_connection *connPtr)
 {
@@ -37,7 +37,7 @@ static void ListRelays(struct mg_connection *connPtr)
     bool state;
     int wrote;
 
-    for (id = 1; id <= nbRelays; id++)
+    for (id = 0; id < nbRelays; id++)
     {
         if (relayControl_GetState(id, &state) != LE_OK)
         {
