@@ -184,13 +184,15 @@ static void * MainResponseHandler(void * context)
 //--------------------------------------------------------------------------------------------------
 COMPONENT_INIT
 {
+    // Start routing session
+    LE_INFO("Starting session");
+    dataRouter_SessionStart("","", 0, DATAROUTER_CACHE);
+
     // Init thread to process responses
     ResponseThread = le_thread_Create("ResponseThread", MainResponseHandler, NULL);
     le_thread_Start(ResponseThread);
 
     // Reset arduino upon app start to make sure we are in a default state
+    LE_INFO("Reset arduino");
     mangoh_muxCtrl_ArduinoReset();
-
-    // Start routing session
-    dataRouter_SessionStart("","", 0, DATAROUTER_CACHE);
 }
