@@ -166,6 +166,9 @@ static void * MainResponseHandler(void * context)
 {
     dataRouter_ConnectService();
 
+    LE_INFO("Starting session");
+    dataRouter_SessionStart("","", 0, DATAROUTER_CACHE);
+
     // Register handlers to process async results from Arduino
     GetStateSem = le_sem_Create("GetStateReq", 0);
     dataRouter_AddDataUpdateHandler(KEY_GETSTATE_RSP, GetStateResponseHandler, NULL);

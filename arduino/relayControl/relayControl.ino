@@ -1,6 +1,5 @@
-
+#include <SwiBridge.h>
 #include <Bridge.h>
-#include <AirVantage.h>
 
 #define KEY_COUNT_REQ      "RelayCountReq"
 #define KEY_COUNT_RSP      "RelayCountRsp"
@@ -16,6 +15,9 @@
 void setup() {
   uint8_t i;
 
+  Serial.begin(9600);
+  Serial.println("RelayControl");
+  
   for (i = MIN_GPIO; i <= MAX_GPIO; i++) {
     // setup gpio pin
     pinMode(i, OUTPUT);
@@ -26,13 +28,14 @@ void setup() {
 
   // initialize bridge and mailbox
   Bridge.begin(115200);
-  AirVantage.begin();
+  SwiBridge.begin();
 
-  AirVantage.startSession("", "", 0, CACHE);
+  Serial.println("Start Session: ");
+  SwiBridge.startSession("", "", 0, CACHE);
 
-  AirVantage.subscribe(KEY_COUNT_REQ);
-  AirVantage.subscribe(KEY_GETSTATE_REQ);
-  AirVantage.subscribe(KEY_SETSTATE_REQ);
+  SwiBridge.subscribe(KEY_COUNT_REQ);
+  SwiBridge.subscribe(KEY_GETSTATE_REQ);
+  SwiBridge.subscribe(KEY_SETSTATE_REQ);
 }
 
 // Pin is 1-indexed so offset by 1
@@ -92,12 +95,12 @@ void handleGetState(String pinStr)
   }
 
   String response = pinStr + "," + valueStr;
-  AirVantage.pushString(KEY_GETSTATE_RSP, response);
+  SwiBridge.pushString(KEY_GETSTATE_RSP, response);
 }
 
 void handleCount()
 {
-  AirVantage.pushInteger(KEY_COUNT_RSP, (1 + MAX_GPIO - MIN_GPIO));
+  SwiBridge.pushInteger(KEY_COUNT_RSP, (1 + MAX_GPIO - MIN_GPIO));
 }
 
 void loop() {
@@ -106,9 +109,9 @@ void loop() {
   String current;
   String content;
 
-  while (AirVantage.dataAvailable())
+  while (SwiBridge.dataAvailable())
   {
-    AirVantage.readMessage(message);
+    SwiBridge.readMessage(message);
     while (message != "")
     {
       current = message.substring(0, message.indexOf("\n"));
@@ -116,7 +119,7 @@ void loop() {
 
       // Set state ?
       if (current.startsWith("|" KEY_SETSTATE_REQ)) {
-        content = AirVantage.parseString(KEY_SETSTATE_REQ, current);
+        content = SwiBridge.parseString(KEY_SETSTATE_REQ, current);
         if (Serial)
           Serial.println("SetState request");
         handleSetState(content);
@@ -124,7 +127,7 @@ void loop() {
 
       // Get state ?
       else if (current.startsWith("|" KEY_GETSTATE_REQ)) {
-        content = AirVantage.parseString(KEY_GETSTATE_REQ, current);
+        content = SwiBridge.parseString(KEY_GETSTATE_REQ, current);
         if (Serial)
           Serial.println("GetState request");
         handleGetState(content);
