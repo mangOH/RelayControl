@@ -2,7 +2,7 @@ requires:
 {
     api:
     {
-        ${MANGOH_ROOT}/samples/RelayControl/relayControl.api
+        ${CURDIR}/../relayControl.api
     }
 }
 
